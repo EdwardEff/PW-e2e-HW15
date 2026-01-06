@@ -1,46 +1,33 @@
-import { expect, test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import "dotenv/config";
 
-const appUrl = process.env.APP_URL;
+const { APP_URL } = process.env;
+if (!APP_URL) throw new Error("APP_URL is not defined");
+
+const username = faker.internet.username();
+const password = faker.internet.password();
 
 test.beforeEach(async ({ page }) => {
-  await page.goto(appUrl);
-  await page.waitForLoadState("networkidle");
+    await page.goto(APP_URL);
+    await page.waitForLoadState("networkidle");
 });
 
-const randomUsername = faker.internet.username();
-const randomPassword = faker.internet.password();
+test("Login button disabled when one field is empty", async ({ page }) => {
+    const login = page.getByTestId("username-input");
+    const submit = page.getByTestId("signIn-button");
 
-if (!appUrl) {
-  throw new Error("APP_URL is not defined in .env");
-}
-
-test.beforeEach(async ({ page }) => {
-  await page.goto(appUrl);
-  await page.waitForLoadState("load");
+    await expect(submit).toBeEnabled();
+    await login.fill(username);
+    await expect(submit).toBeDisabled();
 });
 
-test("Login button is disabled if one field is empty", async ({ page }) => {
-  const loginField = page.getByTestId("username-input");
-  const signInButton = page.getByTestId("signIn-button");
+test("Auth error modal appears for invalid credentials", async ({ page }) => {
+    await page.getByTestId("username-input").fill(username);
+    await page.getByTestId("password-input").fill(password);
+    await page.getByTestId("signIn-button").click();
 
-  await expect(signInButton).toBeEnabled();
-  await loginField.fill(randomUsername);
-  await expect(signInButton).toBeDisabled();
-});
-
-test("Auth error modal is visible if credentials are wrong", async ({
-  page,
-}) => {
-  const loginField = page.getByTestId("username-input");
-  const passwordField = page.getByTestId("password-input");
-  const signInButton = page.getByTestId("signIn-button");
-  const authErrorPopup = page.getByTestId("authorizationError-popup");
-
-  await loginField.fill(randomUsername);
-  await passwordField.fill(randomPassword);
-  await signInButton.click();
-
-  await expect(authErrorPopup).toBeVisible();
+    await expect(
+        page.getByTestId("authorizationError-popup")
+    ).toBeVisible();
 });
