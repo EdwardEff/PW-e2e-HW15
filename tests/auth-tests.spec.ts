@@ -1,12 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { faker } from "@faker-js/faker";
 import "dotenv/config";
 
 const { APP_URL } = process.env;
 if (!APP_URL) throw new Error("APP_URL is not defined");
 
-const username = faker.internet.username();
-const password = faker.internet.password();
+let faker: any;
+
+test.beforeAll(async () => {
+    faker = (await import("@faker-js/faker")).faker;
+});
 
 test.beforeEach(async ({ page }) => {
     await page.goto(APP_URL);
@@ -14,6 +16,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("Login button disabled when one field is empty", async ({ page }) => {
+    const username = faker.internet.username();
+
     const login = page.getByTestId("username-input");
     const submit = page.getByTestId("signIn-button");
 
@@ -23,8 +27,8 @@ test("Login button disabled when one field is empty", async ({ page }) => {
 });
 
 test("Auth error modal appears for invalid credentials", async ({ page }) => {
-    await page.getByTestId("username-input").fill(username);
-    await page.getByTestId("password-input").fill(password);
+    await page.getByTestId("username-input").fill(faker.internet.username());
+    await page.getByTestId("password-input").fill(faker.internet.password());
     await page.getByTestId("signIn-button").click();
 
     await expect(
