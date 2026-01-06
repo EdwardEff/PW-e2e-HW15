@@ -3,7 +3,7 @@ on:
   push:
     branches: [main, master, HW16]
   pull_request:
-    branches: [main, master. HW16]
+    branches: [main, master, HW16]
 
 jobs:
   test:
