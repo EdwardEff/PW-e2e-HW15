@@ -33,3 +33,4 @@ test("Auth error modal appears for invalid credentials", async ({ page }) => {
 
   await expect(page.getByTestId("authorizationError-popup")).toBeVisible();
 });
+
